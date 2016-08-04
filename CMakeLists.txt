@@ -146,6 +146,18 @@ include_directories(${BETR_INCDIRS})
 # Unit testing.
 enable_testing()
 
+add_test(
+NAME mtest 
+COMMAND python -m unittest discover --buffer --start-directory mtest/unit/
+WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/regression-tests 
+)
+
+add_test(
+NAME rtest 
+COMMAND rtest_betr.py --backtrace --executable ../local/bin/sbetr
+WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/regression-tests 
+)
+
 # Source code itself.
 include_directories("${PROJECT_SOURCE_DIR}")
 add_subdirectory(src)
