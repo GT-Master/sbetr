@@ -1213,7 +1213,7 @@ contains
           call ebbks(ycp,f,nprimeq, neq,dt05,yf,pscal)
 
           !determine the relative error
-          rerr=get_rerr(yc,yf, neq)*exp(1._r8-1._r8/pscal)
+          rerr=get_rerr(yc,yf, neq)*exp(1._r8-1._r8/(pscal+1.e-20))
 
           !determine time scalar factor
           call get_tscal(rerr,dt_scal,acc)
