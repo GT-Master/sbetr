@@ -140,7 +140,7 @@ module H2OIsotopeBGCReactionsType
 
 !-------------------------------------------------------------------------------
 
-  subroutine Init_betrbgc(this, bounds, lbj, ubj, betrtracer_vars, namelist_buffer, bstatus)
+  subroutine Init_betrbgc(this, bounds, lbj, ubj, betrtracer_vars, betr_nml, bstatus)
   !
   ! DESCRIPTION
   ! initialize the betrbgc
@@ -150,12 +150,13 @@ module H2OIsotopeBGCReactionsType
   use BeTR_decompMod , only : betr_bounds_type
   use BetrStatusType , only : betr_status_type
   use gbetrType      , only : gbetr_type
+  use BeTRNmlType    , only : betr_nml_type
   implicit none
   class(bgc_reaction_h2oiso_type) , intent(inout)    :: this
   type(betr_bounds_type)          , intent(in)    :: bounds
   integer                         , intent(in)    :: lbj, ubj
   type(BeTRtracer_type )          , intent(inout) :: betrtracer_vars
-  character(len=*)                , intent(in)    :: namelist_buffer
+  type(betr_nml_type)             , intent(in)    :: betr_nml
   type(betr_status_type)          , intent(out)   :: bstatus
 
   !local variables
@@ -751,7 +752,7 @@ module H2OIsotopeBGCReactionsType
    type(betr_status_type)               , intent(out):: betr_status
    call betr_status%reset()
    SHR_ASSERT_ALL((ubound(dzsoi)  == (/bounds%endc, bounds%ubj/)),   errMsg(mod_filename,__LINE__), betr_status)
-   if(betr_status%check_status())return   
+   if(betr_status%check_status())return
 
    if (this%dummy_compiler_warning) continue
      end subroutine debug_info
@@ -780,7 +781,7 @@ module H2OIsotopeBGCReactionsType
    call betr_status%reset()
    SHR_ASSERT_ALL((ubound(jtops)  == (/bounds%endc/)),   errMsg(mod_filename,__LINE__), betr_status)
    if(betr_status%check_status())return
-   
+
    if (this%dummy_compiler_warning) continue
    if (bounds%begc > 0)             continue
 

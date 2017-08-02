@@ -28,6 +28,7 @@ module BetrType
   use BeTR_biogeoStateType     , only : betr_biogeo_state_type
   use BeTR_biogeoFluxType      , only : betr_biogeo_flux_type
   use PlantNutKineticsMod      , only : PlantNutKinetics_type
+  use BeTRNmlType              , only : betr_nml_type
   implicit none
 
   private
@@ -109,7 +110,7 @@ contains
   end function create_betr_type
 
 !-------------------------------------------------------------------------------
-  subroutine Init(this, namelist_buffer, bounds, col, biophysforc, asoibgc, bstatus)
+  subroutine Init(this, betr_nml, bounds, col, biophysforc, asoibgc, bstatus)
 
     ! FIXME(bja, 201604) need to remove waterstate, cnstate and
     ! ecophyscon from this routine.
@@ -124,7 +125,7 @@ contains
     implicit none
     !arguments
     class(betr_type)                         , intent(inout)        :: this
-    character(len=betr_namelist_buffer_size) , intent(in)           :: namelist_buffer
+    type(betr_nml_type)                      , intent(in)           :: betr_nml
     type(betr_bounds_type)                   , intent(in)           :: bounds
     type(betr_column_type)                   , intent(in)           :: col
     type(betr_biogeophys_input_type)         , intent(in)           :: biophysforc
@@ -137,8 +138,7 @@ contains
 
     lbj = bounds%lbj;  ubj = bounds%ubj
     !read in top level control parameters
-    call this%ReadNamelist(namelist_buffer, bstatus)
-    if(bstatus%check_status())return
+    call this%ReadNamelist(betr_nml)
 
     !read in application specific parameters
     call this%create_betr_application(this%bgc_reaction, this%plant_soilbgc, this%reaction_method,&
@@ -152,7 +152,7 @@ contains
 
     call this%tracers%init_scalars()
 
-    call this%bgc_reaction%Init_betrbgc(bounds, lbj, ubj, this%tracers, namelist_buffer, bstatus)
+    call this%bgc_reaction%Init_betrbgc(bounds, lbj, ubj, this%tracers, betr_nml, bstatus)
     if(bstatus%check_status())return
 
     call this%aereconds%Init(bounds)
@@ -168,7 +168,7 @@ contains
     call this%tracerboundaryconds%Init(bounds, this%tracers)
 
     !inside Init_plant_soilbgc, specific plant soil bgc coupler data type will be created
-    call this%plant_soilbgc%Init_plant_soilbgc(bounds, lbj, ubj, namelist_buffer)
+    call this%plant_soilbgc%Init_plant_soilbgc(bounds, lbj, ubj, betr_nml)
 
     !initialize state variable
     call this%bgc_reaction%initCold(bounds, col, this%tracers, biophysforc, this%tracerstates)
@@ -185,75 +185,24 @@ contains
   end subroutine Init
 
 !-------------------------------------------------------------------------------
-  subroutine ReadNamelist(this, namelist_buffer, bstatus)
+  subroutine ReadNamelist(this, betr_nml)
     !
     ! !DESCRIPTION:
     ! read namelist for betr configuration
     ! !USES:
-    use spmdMod        , only : masterproc, mpicom
-    use betr_ctrl      , only : iulog => biulog
-    use bshr_log_mod   , only : errMsg => shr_log_errMsg
-    use betr_constants , only : stdout, betr_string_length_long, betr_namelist_buffer_size
-    use BetrStatusType , only : betr_status_type
+
     implicit none
     ! !ARGUMENTS:
-    class(betr_type)                         , intent(inout) :: this
-    character(len=betr_namelist_buffer_size) , intent(in)    :: namelist_buffer
-    type(betr_status_type)                   , intent(out) :: bstatus
+    class(betr_type)       , intent(inout) :: this
+    type(betr_nml_type)    , intent(in)    :: betr_nml
 
-    !
-    ! !LOCAL VARIABLES:
-    integer                                :: nml_error
-    character(len=*), parameter            :: subname = 'ReadNamelist'
-    character(len=betr_string_length)      :: reaction_method
-    character(len=betr_string_length_long) :: ioerror_msg
-    logical                                :: advection_on, diffusion_on, reaction_on, ebullition_on
-    logical                                :: esm_on
     !-----------------------------------------------------------------------
 
-    namelist / betr_parameters /                  &
-         reaction_method,                         &
-         advection_on, diffusion_on, reaction_on, &
-         ebullition_on, esm_on
-
-    call bstatus%reset()
-    reaction_method = 'mock_run'
-    advection_on    = .true.
-    diffusion_on    = .true.
-    reaction_on     = .true.
-    ebullition_on   =.true.
-    esm_on          =.false.
-    ! ----------------------------------------------------------------------
-    ! Read namelist from standard input.
-    ! ----------------------------------------------------------------------
-
-    if ( index(trim(namelist_buffer),'betr_parameters')/=0 )then
-       ioerror_msg=''
-       read(namelist_buffer, nml=betr_parameters, iostat=nml_error, iomsg=ioerror_msg)
-       if (nml_error /= 0) then
-          call bstatus%set_msg(msg="ERROR reading betr_parameters namelist "//errmsg(filename, __LINE__),err=-1)
-          return
-       end if
-    end if
-
-    if (.not. esm_on) then
-       write(stdout, *)
-       write(stdout, *) '--------------------'
-       write(stdout, *)
-       write(stdout, *) ' betr bgc type :'
-       write(stdout, *)
-       write(stdout, *) ' betr_parameters namelist settings :'
-       write(stdout, *)
-       write(stdout, betr_parameters)
-       write(stdout, *)
-       write(stdout, *) '--------------------'
-    endif
-
-    this%reaction_method = reaction_method
-    this%advection_on    = advection_on
-    this%diffusion_on    = diffusion_on
-    this%reaction_on     = reaction_on
-    this%ebullition_on   = ebullition_on
+    this%reaction_method = betr_nml%reaction_method
+    this%advection_on    = betr_nml%advection_on
+    this%diffusion_on    = betr_nml%diffusion_on
+    this%reaction_on     = betr_nml%reaction_on
+    this%ebullition_on   = betr_nml%ebullition_on
   end subroutine ReadNamelist
 
   !-------------------------------------------------------------------------------

@@ -62,7 +62,7 @@ module PlantSoilBgcCnpType
   end function constructor
 
   !-------------------------------------------------------------------------------
-  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, namelist_buffer)
+  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, betr_nml)
 
   !
   ! !DESCRIPTION:
@@ -71,12 +71,13 @@ module PlantSoilBgcCnpType
   ! here I call alm instances directly?
   ! !USES:
   use BeTR_decompMod       , only : betr_bounds_type
+  use BeTRNmlType          , only : betr_nml_type
   implicit none
   ! !ARGUMENTS:
   class(plant_soilbgc_cnp_type) , intent(inout) :: this
   type(betr_bounds_type)         , intent(in) :: bounds
   integer                   , intent(in) :: lbj, ubj
-  character(len=*)          , intent(in) :: namelist_buffer
+  type(betr_nml_type)       , intent(in) :: betr_nml
 
   call this%InitAllocate(bounds, lbj, ubj)
   end subroutine Init_plant_soilbgc

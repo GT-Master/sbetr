@@ -44,7 +44,7 @@ module H2OIsotopePlantSoilBGCType
   end function constructor
 
   !-------------------------------------------------------------------------------
-  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, namelist_buffer)
+  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, betr_nml)
 
   !
   ! !DESCRIPTION:
@@ -53,11 +53,12 @@ module H2OIsotopePlantSoilBGCType
   ! !USES:
   use BeTR_decompMod             , only : betr_bounds_type
   use gbetrType                  , only : gbetr_type
+  use betrNmlType                , only : betr_nml_type
   implicit none
   ! !ARGUMENTS:
   class(plant_soilbgc_h2oiso_run_type) , intent(inout) :: this
   type(betr_bounds_type)               , intent(in) :: bounds
-  character(len=*)                     , intent(in) :: namelist_buffer
+  type(betr_nml_type)                  , intent(in) :: betr_nml
   integer                              , intent(in) :: lbj, ubj
 
   ! remove compiler warnings for unused dummy args

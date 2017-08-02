@@ -101,7 +101,7 @@ contains
   end subroutine init_boundary_condition_type
 
   !-------------------------------------------------------------------------------
-  subroutine Init_betrbgc(this, bounds, lbj, ubj, betrtracer_vars, namelist_buffer, bstatus)
+  subroutine Init_betrbgc(this, bounds, lbj, ubj, betrtracer_vars, betr_nml, bstatus)
     !
     ! DESCRIPTION:
     ! initialize the betrbgc
@@ -111,13 +111,14 @@ contains
     use MathfuncMod    , only : addone
     use BetrStatusType , only : betr_status_type
     use gbetrType      , only : gbetr_type
+    use BeTRNmlType    , only : betr_nml_type
     implicit none
     ! !ARGUMENTS:
     class(bgc_reaction_mock_run_type), intent(inout)    :: this
     type(bounds_type)                , intent(in)    :: bounds
     integer                          , intent(in)    :: lbj, ubj
     type(BeTRtracer_type )           , intent(inout) :: betrtracer_vars
-    character(len=*)                 , intent(in)    :: namelist_buffer
+    type(betr_nml_type)              , intent(in)    :: betr_nml
     type(betr_status_type)           , intent(out)   :: bstatus
     character(len=*), parameter                      :: subname ='Init_betrbgc'
 

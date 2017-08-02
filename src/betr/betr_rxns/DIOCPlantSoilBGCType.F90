@@ -2,7 +2,7 @@ module DIOCPlantSoilBGCType
   !
   !DESCRIPTION
   ! mock interface for plant soil bgc coupling
-#include "bshr_assert.h"  
+#include "bshr_assert.h"
   !USES
   use PlantSoilBGCMod , only : plant_soilbgc_type
   use betr_decompMod  , only : bounds_type => betr_bounds_type
@@ -43,19 +43,20 @@ module DIOCPlantSoilBGCType
   end function constructor
 
   !-------------------------------------------------------------------------------
-  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, namelist_buffer)
+  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, betr_nml)
   !
   ! !DESCRIPTION:
   ! template for init_betrbgc
   !
   ! !USES:
   use gbetrType      , only : gbetr_type
+  use BeTRNmlType    , only : betr_nml_type
   implicit none
   ! !ARGUMENTS:
   class(plant_soilbgc_dioc_run_type) , intent(inout) :: this
   type(bounds_type)                  , intent(in) :: bounds
   integer                            , intent(in) :: lbj, ubj
-  character(len=*)                   , intent(in) :: namelist_buffer
+  type(betr_nml_type)                , intent(in) :: betr_nml
 
   ! remove compiler warnings for unused dummy args
   if (this%dummy_compiler_warning) continue

@@ -43,19 +43,20 @@ module MockPlantSoilBGCType
   end function constructor
 
   !-------------------------------------------------------------------------------
-  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, namelist_buffer)
+  subroutine Init_plant_soilbgc(this, bounds, lbj, ubj, betr_nml)
   !
   ! !DESCRIPTION:
   ! template for init_betrbgc
   !
   ! !USES:
   use gbetrType      , only : gbetr_type
+  use BeTRNmlType    , only : betr_nml_type
   implicit none
   ! !ARGUMENTS:
   class(plant_soilbgc_mock_run_type) , intent(inout) :: this
   type(bounds_type)                  , intent(in) :: bounds
   integer                            , intent(in) :: lbj, ubj
-  character(len=*)                   , intent(in) :: namelist_buffer
+  type(betr_nml_type)                , intent(in) :: betr_nml
 
   ! remove compiler warnings for unused dummy args
   if (this%dummy_compiler_warning) continue

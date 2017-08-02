@@ -40,6 +40,7 @@ module BeTRSimulation
   use betr_columnType          , only : betr_column_type, create_betr_column_type
   use betr_patchType           , only : betr_patch_type, create_betr_patch_type
   use betr_varcon              , only : spval => bspval
+  use BeTRNmlType              , only : betr_nml_type
   implicit none
 
   private
@@ -62,6 +63,7 @@ module BeTRSimulation
 
      type(betr_regression_type), private          :: regression
      type(betr_time_type), public                 :: betr_time
+     type(betr_nml_type),  public                 :: betr_nml
      integer, public                              :: num_soilp
      integer, public, allocatable                 :: filter_soilp(:)
      integer, public                              :: num_jtops
@@ -280,11 +282,15 @@ contains
     else
       this%base_filename = ''
     endif
+
     if(present(masterproc))then
       call this%betr_time%Init(namelist_buffer, masterproc)
+      call this%betr_nml%Init(namelist_buffer, masterproc)
     else
       call this%betr_time%Init(namelist_buffer)
+      call this%betr_nml%Init(namelist_buffer, masterproc)
     endif
+    print*,'namelist ok'
     !allocate memory
     allocate(this%betr(bounds%begc:bounds%endc))
     allocate(this%biophys_forc(bounds%begc:bounds%endc))
@@ -320,7 +326,7 @@ contains
         waterstate_vars = waterstate)
 
     do c = bounds%begc, bounds%endc
-      call this%betr(c)%Init(namelist_buffer, betr_bounds, this%betr_col(c), &
+      call this%betr(c)%Init(this%betr_nml, betr_bounds, this%betr_col(c), &
           this%biophys_forc(c), asoibgc, this%bstatus(c))
       if(c==bounds%begc)this%active_soibgc=asoibgc
       if(this%bstatus(c)%check_status())then
