@@ -14,6 +14,7 @@ module BeTRSimulation
   use tracer_varcon  , only : betr_nlevsoi, betr_nlevsno, betr_nlevtrc_soil
   use BeTR_decompMod , only : betr_bounds_type
   use decompMod      , only : bounds_type
+  use betr_constants , only :  betr_errmsg_len
 #if (defined SBETR)
   use PatchType      , only : patch_type
   use ColumnType     , only : column_type
@@ -174,8 +175,10 @@ contains
     type(waterstate_type)                    , intent(inout) :: waterstate
     logical,                        optional , intent(in)    :: masterproc
     character(len=*), parameter :: subname = 'BeTRSimulationInit'
+    character(len=betr_errmsg_len) :: msg
 
-    call endrun(msg="ERROR "//subname//" unimplemented. "//errmsg(mod_filename, __LINE__))
+    msg=trim("ERROR "//subname//" unimplemented. "//errmsg(mod_filename, __LINE__))
+    call endrun(msg=msg)
 
     if (this%num_soilc > 0)                  continue
     if (bounds%begc > 0)                     continue
@@ -203,9 +206,11 @@ contains
     type(waterstate_type)                    , intent(inout) :: waterstate
     character(len=betr_namelist_buffer_size) , intent(in)    :: namelist_buffer
     character(len=betr_filename_length)      , intent(in)    :: base_filename
-    character(len=*), parameter :: subname = 'BeTRSimulationInit'
+    character(len=*), parameter :: subname = 'BeTRSimulationInitOffline'
+    character(len=betr_errmsg_len) :: msg
 
-    call endrun(msg="ERROR "//subname//" unimplemented. "//errmsg(mod_filename, __LINE__))
+    msg=trim("ERROR "//subname//" unimplemented. "//errmsg(mod_filename, __LINE__))
+    call endrun(msg=msg)
 
     if (this%num_soilc > 0)                  continue
     if (bounds%begc > 0)                     continue
@@ -274,6 +279,8 @@ contains
     type(betr_bounds_type) :: betr_bounds
     integer :: c, l
     logical :: asoibgc
+    character(len=betr_errmsg_len) :: msg
+
     !print*,'base_filename',trim(base_filename)
 
     biulog = iulog
@@ -290,7 +297,7 @@ contains
       call this%betr_time%Init(namelist_buffer)
       call this%betr_nml%Init(namelist_buffer, masterproc)
     endif
-    print*,'namelist ok'
+
     !allocate memory
     allocate(this%betr(bounds%begc:bounds%endc))
     allocate(this%biophys_forc(bounds%begc:bounds%endc))
@@ -336,8 +343,10 @@ contains
       endif
     enddo
 
-    if(this%bsimstatus%check_status())call endrun(msg=this%bsimstatus%print_msg())
-
+    if(this%bsimstatus%check_status())then
+      msg = trim(this%bsimstatus%print_msg())
+      call endrun(msg=msg)
+    endif
     do c = bounds%begc, bounds%endc
 
       call this%biogeo_state(c)%Init(betr_bounds, this%active_soibgc)
@@ -359,7 +368,10 @@ contains
     if(this%bstatus(c)%check_status())then
       call this%bsimstatus%setcol(c)
       call this%bsimstatus%set_msg(this%bstatus(c)%print_msg(),this%bstatus(c)%print_err())
-      if(this%bsimstatus%check_status())call endrun(msg=this%bsimstatus%print_msg())
+      if(this%bsimstatus%check_status())then
+        msg=trim(this%bsimstatus%print_msg())
+        call endrun(msg=msg)
+      endif
     endif
 
     if(betr_offline)then
@@ -378,7 +390,10 @@ contains
 
     if(present(base_filename)) then
       call this%regression%Init(base_filename, namelist_buffer, this%bsimstatus)
-      if(this%bsimstatus%check_status())call endrun(msg=this%bsimstatus%print_msg())
+      if(this%bsimstatus%check_status())then
+        msg=trim(this%bsimstatus%print_msg())
+        call endrun(msg=msg)
+      endif
     endif
   end subroutine BeTRInit
   !---------------------------------------------------------------------------------
@@ -443,13 +458,13 @@ contains
     character(len=*), intent(in) :: flag
 
     integer :: c
-    print*,'open restart file ',trim(fname), ' for ',trim(flag)
+    !print*,'open restart file ',trim(fname), ' for ',trim(flag)
     if(trim(flag)=='read')then
       call ncd_pio_openfile(ncid, trim(fname), ncd_nowrite)
     elseif(trim(flag)=='write')then
       call ncd_pio_createfile(ncid, trim(fname))
     endif
-    print*,'creating file succeeded'
+    !print*,'creating file succeeded'
 
   end subroutine BeTRSimulationRestartOpen
 
@@ -558,7 +573,7 @@ contains
     type(betr_bounds_type) :: betr_bounds
     integer                :: lbj, ubj
     integer :: c
-
+    character(len=betr_errmsg_len) :: msg
     !set lbj and ubj
     call this%BeTRSetBounds(betr_bounds)
 
@@ -574,8 +589,10 @@ contains
         exit
       endif
     enddo
-    if(this%bsimstatus%check_status()) &
-      call endrun(msg=trim(this%bsimstatus%print_msg()))
+    if(this%bsimstatus%check_status()) then
+      msg=trim(this%bsimstatus%print_msg())
+      call endrun(msg=msg)
+    endif
   end  subroutine BeTRSimulationBeginMassBalanceCheck
   !---------------------------------------------------------------------------------
 
@@ -590,10 +607,11 @@ contains
     !ARGUMENTS
     class(betr_simulation_type) , intent(inout) :: this
     type(bounds_type)           , intent(in)    :: bounds
+
     !TEMPORARY VARIABLES
     type(betr_bounds_type) :: betr_bounds
     integer :: c
-
+    character(len=betr_errmsg_len) :: msg
     !set lbj and ubj
     call this%BeTRSetBounds(betr_bounds)
 
@@ -610,9 +628,8 @@ contains
       endif
    enddo
    if(this%bsimstatus%check_status()) then
-      print*,this%bsimstatus%cindex
-      print*,trim(this%bsimstatus%print_msg())
-      call endrun(msg=trim(this%bsimstatus%print_msg()))
+      msg=trim(this%bsimstatus%print_msg())
+      call endrun(msg=msg)
    endif
   end subroutine BeTRSimulationMassBalanceCheck
 
@@ -1262,7 +1279,7 @@ contains
    !TEMPORARY VARIABLES
    type(betr_bounds_type)     :: betr_bounds
    integer :: fc, c
-
+   character(len=betr_errmsg_len) :: msg
    call this%BeTRSetBounds(betr_bounds)
 
    do fc = 1, num_snowc
@@ -1276,8 +1293,10 @@ contains
        exit
      endif
    enddo
-  if(this%bsimstatus%check_status()) &
-    call endrun(msg=trim(this%bsimstatus%print_msg()))
+  if(this%bsimstatus%check_status()) then
+    msg=trim(this%bsimstatus%print_msg())
+    call endrun(msg=msg)
+  endif
   end subroutine BeTRSimulationDvideSnowLayers
 
   !------------------------------------------------------------------------
@@ -1299,7 +1318,7 @@ contains
    !TEMPORARY VARIABLES
    type(betr_bounds_type)     :: betr_bounds
    integer :: fc, c
-
+   character(len=betr_errmsg_len) :: msg
    call this%BeTRSetBounds(betr_bounds)
 
    do fc = 1, num_snowc
@@ -1313,8 +1332,10 @@ contains
        exit
      endif
    enddo
-   if(this%bsimstatus%check_status()) &
-    call endrun(msg=trim(this%bsimstatus%print_msg()))
+   if(this%bsimstatus%check_status()) then
+     msg=trim(this%bsimstatus%print_msg())
+     call endrun(msg=msg)
+   endif
   end subroutine BeTRSimulationCombineSnowLayers
 
   !------------------------------------------------------------------------
@@ -1347,6 +1368,7 @@ contains
 
   real(r8), pointer :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
   real(r8), pointer :: data1dptr(:)   ! temp. pointers for slicing larger arrays
+  character(len=betr_errmsg_len) :: msg
 
   namelist /hist2d_fmt/    &
   fname, units, avgflag,type2d,long_name, default
@@ -1355,7 +1377,8 @@ contains
   fname, units, avgflag, long_name, default
 
   if(betr_offline .and. (.not. present(ncid)))then
-    call endrun(msg="ncid not defined in "//subname//errmsg(mod_filename, __LINE__))
+    msg=trim("ncid not defined in "//subname//errmsg(mod_filename, __LINE__))
+    call endrun(msg=msg)
   endif
 
   begc=bounds%begc; endc=bounds%endc
@@ -1430,7 +1453,7 @@ contains
   real(r8), pointer :: data1dptr(:)   ! temp. pointers for slicing larger arrays
 
   character(len=*), parameter :: subname = 'hist_create_states'
-
+  character(len=betr_errmsg_len) :: msg
   namelist /hist2d_fmt/    &
   fname, units, avgflag,type2d,long_name, default
 
@@ -1438,7 +1461,8 @@ contains
   fname, units, avgflag, long_name, default
 
   if(betr_offline .and. (.not. present(ncid)))then
-    call endrun(msg="ncid not defined in "//subname//errmsg(mod_filename, __LINE__))
+    msg=trim("ncid not defined in "//subname//errmsg(mod_filename, __LINE__))
+    call endrun(msg=msg)
   endif
 
   begc = bounds%begc; endc = bounds%endc

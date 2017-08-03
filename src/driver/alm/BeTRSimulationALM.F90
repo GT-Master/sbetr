@@ -17,6 +17,7 @@ module BeTRSimulationALM
   use tracer_varcon       , only : betr_nlevsoi, betr_nlevsno, betr_nlevtrc_soil
   use betr_decompMod      , only : betr_bounds_type
   use betr_varcon         , only : betr_maxpatch_pft
+  use betr_constants, only :  betr_errmsg_len
 #if (defined SBETR)
   use PatchType      , only : patch_type
   use ColumnType     , only : column_type
@@ -182,6 +183,7 @@ contains
     !TEMPORARY VARIABLES
     type(betr_bounds_type)     :: betr_bounds
     integer :: c, c_l, begc_l, endc_l
+    character(len=betr_errmsg_len) :: msg
 
     call this%bsimstatus%reset()
 
@@ -250,8 +252,10 @@ contains
       if(.false.)call this%betr(c)%debug_info(betr_bounds, this%betr_col(c), this%num_soilc, this%filter_soilc, 'aft w/o drain',this%bstatus(c))
 !--------
     enddo
-    if(this%bsimstatus%check_status()) &
-      call endrun(msg=this%bsimstatus%print_msg())
+    if(this%bsimstatus%check_status())then
+      msg=trim(this%bsimstatus%print_msg())
+      call endrun(msg=msg)
+    endif
   end subroutine ALMStepWithoutDrainage
 
   !---------------------------------------------------------------------------------
@@ -293,6 +297,7 @@ contains
     type(betr_bounds_type) :: betr_bounds
     integer                :: lbj, ubj ! lower and upper bounds, make sure they are > 0
     integer                :: c, c_l, begc_l, endc_l
+    character(len=betr_errmsg_len) :: msg
 
     call this%bsimstatus%reset()
 
@@ -336,9 +341,10 @@ contains
 ! debug
       if(.false.)call this%betr(c)%debug_info(betr_bounds, this%betr_col(c), this%num_soilc, this%filter_soilc, 'afdrain', this%bstatus(c))
     enddo
-    if(this%bsimstatus%check_status()) &
-      call endrun(msg=this%bsimstatus%print_msg())
-
+    if(this%bsimstatus%check_status())then
+      msg=trim(this%bsimstatus%print_msg())
+      call endrun(msg=msg)
+    endif
   end subroutine ALMStepWithDrainage
 
   !---------------------------------------------------------------------------------

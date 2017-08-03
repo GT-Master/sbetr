@@ -4,6 +4,7 @@ module ALMBeTRNLMod
   use betr_constants , only : betr_namelist_buffer_size, betr_namelist_buffer_size_ext
   use abortutils , only: endrun
   use betr_constants, only : betr_string_length
+  use betr_constants, only :  betr_errmsg_len
 implicit none
   character(len=*), private, parameter :: mod_filename = &
        __FILE__
@@ -50,6 +51,7 @@ contains
 
     character(len=betr_namelist_buffer_size_ext) :: bgc_namelist_buffer
     logical :: appfile_on
+    character(len=betr_errmsg_len) :: msg
     ! ----------------------------------------------------------------------
     ! Read namelist from standard input.
     ! ----------------------------------------------------------------------
@@ -109,7 +111,10 @@ contains
       ' ebullition_on=',trim(log2str(ebullition_on)),new_line('A')//'/'
 
     call AppLoadParameters(bgc_namelist_buffer, reaction_method, bstatus)
-    if(bstatus%check_status())call endrun(msg=bstatus%print_msg())
+    if(bstatus%check_status())then
+      msg=trim(bstatus%print_msg())
+      call endrun(msg=msg)
+    endif
   end subroutine betr_readNL
 
   !-------------------------------------------------------------------------------
